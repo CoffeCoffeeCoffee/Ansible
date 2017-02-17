@@ -1,0 +1,7 @@
+---
+# file: roles/ntp/handlers/main.yml
+ - name: restart ntpd
+   service: name=ntpd state=restarted
+
+ - name: restart iptables
+   service: name=iptables state=restarted

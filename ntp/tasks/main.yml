@@ -1,0 +1,48 @@
+---
+#file: roles/ntp/tasks/main.yml
+
+- name: Remove old local time file 
+  file: path=/etc/localtime state=absent
+  ignore_errors: yes
+  tags: ntp
+
+- name: Ensure local time is set to utc
+  file: src=/usr/share/zoneinfo/UTC dest=/etc/localtime state=link
+  tags: ntp
+
+- name: Ensure ntp is installed
+  yum: name=ntp state=installed
+  tags: ntp
+
+- name: Ensure ntp is configured
+  template: src=ntp.j2 dest=/etc/ntp.conf owner=root group=root mode=0644
+  notify: restart ntpd
+  tags: ntp
+
+- name: Ensure ntp is running and enabled
+  service: name=ntpd state=started enabled=yes
+  tags: ntp
+
+- name: Ensure ntpdate is not running or enabled
+  service: name=ntpdate state=stopped enabled=no
+  tags: ntp
+
+- name: Allow ntp through the firewall for RHEL 7
+  firewalld: source=ntp state=enabled
+  ignore_errors: yes
+  when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="7") 
+  tags: firewalld
+  
+- name: Allow ntp through the firewall for RHEL 6
+  iptables: action=insert chain=INPUT ip_version=ipv4 protocol=udp match=udp destination_port=123 comment="ntp" jump=ACCEPT state=present
+  ignore_errors: yes
+  when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+  tags: iptables
+  
+- name: Saving IP6tables configuration for RHEL 6 servers
+  command: service ip6tables save
+  ignore_errors: yes
+  when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+  notify: restart iptables
+  tags: iptables
+
