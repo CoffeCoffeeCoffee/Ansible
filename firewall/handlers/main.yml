@@ -1,5 +1,6 @@
-tasks:
-    
+---
+#file: roles/firewall/tasks/handlers/main.yml
+
     - name: restart ip6tables
       service: name=ip6tables state=restarted
       ignore_errors: yes
