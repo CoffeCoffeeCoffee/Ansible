@@ -1,0 +1,39 @@
+  tasks:    
+
+    - name: Enable IPtables
+      service: name=iptables state=started enabled=yes
+      ignore_errors: yes
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+      
+    - name: Enable IP6tables
+      service: name=iptables state=started enabled=yes
+      ignore_errors: yes
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+    
+    - name: Harden IPtables
+      command: "ip6tables -P INPUT DROP && ip6tables -P FORWARD DROP"
+      notify: restart ip6tables
+      service: name=iptables state=started enabled=yes
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+      
+    - name: Harden IP6tables
+      command: "iptables -P INPUT DROP && iptables -P FORWARD DROP"
+      notify: restart iptables
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+
+    - name: Open port 161 for SNMP monitoring over IPv6 rule for RHEL 6 servers 
+      iptables: action=insert chain=INPUT ip_version=ipv6 source=xxxx:xxx:xx:xx::xxx protocol=udp match=udp destination_port=161 comment="zabbix monitoring" jump=ACCEPT state=present
+      ignore_errors: yes
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+    
+    - name: Saving IP6tables configuration for RHEL 6 servers
+      command: service ip6tables save
+      ignore_errors: yes
+      notify: restart ip6tables
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
+      
+    - name: Open port 161 for SNMP monitoring over IPv6 rich rule for RHEL 7 servers
+      firewalld: rich_rule='rule family="ipv6" source address="xxxx:xxx:xx:xx::xxx" port port="161" protocol="udp" accept' permanent=true state=enabled
+      ignore_errors: yes
+      notify: reload firewalld
+      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="7")
