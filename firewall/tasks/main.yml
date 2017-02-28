@@ -1,20 +1,14 @@
 ---
 #file: roles/firewall/tasks/main.yml
 
-    - name: Enable IPtables
-      service: name=iptables state=started enabled=yes
-      ignore_errors: yes
-      when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
-      
     - name: Enable IP6tables
       service: name=iptables state=started enabled=yes
       ignore_errors: yes
       when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
     
-    - name: Harden IPtables
+    - name: Harden IP6tables
       command: "ip6tables -P INPUT DROP && ip6tables -P FORWARD DROP"
-      notify: restart ip6tables
-      service: name=iptables state=started enabled=yes
+      ignore_errors: yes
       when: (ansible_os_family=="RedHat" and ansible_distribution_major_version=="6")
 
     - name: Open port 161 for SNMP monitoring over IPv6 rule for RHEL 6 servers 
